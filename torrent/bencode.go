@@ -3,7 +3,8 @@ package torrent
 import (
 	"bytes"
 	"crypto/sha1"
-	"encoding/binary"
+
+	"github.com/jackpal/bencode-go"
 )
 
 type bencodeTorrent struct {
@@ -19,22 +20,31 @@ type bencodeInfo struct {
 }
 
 func (bto bencodeTorrent) toTorrentFile() (*TorrentFile, error) {
+	var err error
+
 	tf := TorrentFile{}
+	tf.InfoHash, err = bto.Info.hash()
+	if err != nil {
+		return nil, err
+	}
+
 	tf.Announce = bto.Announce
 	tf.Length = bto.Info.Length
 	tf.Name = bto.Info.Name
-	tf.InfoHash = bto.Info.hash()
 	tf.PieceHashes = bto.Info.getPiecesHashs()
 	tf.PiecesLength = bto.Info.PiecesLength
 
 	return &tf, nil
 }
 
-func (bi bencodeInfo) hash() [20]byte {
+func (bi bencodeInfo) hash() ([20]byte, error) {
 	var buf bytes.Buffer
-	binary.Write(&buf, binary.BigEndian, bi)
+	err := bencode.Marshal(&buf, bi)
+	if err != nil {
+		return [20]byte{}, err
+	}
 
-	return sha1.Sum(buf.Bytes())
+	return sha1.Sum(buf.Bytes()), nil
 }
 
 func (bi bencodeInfo) getPiecesHashs() [][20]byte {
