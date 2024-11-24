@@ -2,8 +2,8 @@ package torrent
 
 import (
 	"bytes"
-	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"net/url"
 	"os"
@@ -37,21 +37,20 @@ func FromFilename(filename string) (*TorrentFile, error) {
 	return bto.toTorrentFile()
 }
 
-func (t *TorrentFile) GetPeers(peerID [20]byte, port uint16) {
+func (t *TorrentFile) GetPeers(peerID [20]byte, port uint16) ([]Peer, error) {
 	url, err := t.buildTrackerURL(peerID, port)
 	if err != nil {
-		panic(err)
+		return []Peer{}, err
 	}
 
 	resp, err := http.Get(url)
 	if err != nil {
-		panic(err)
+		return []Peer{}, err
 	}
 
 	defer resp.Body.Close()
-	body, err := io.ReadAll(resp.Body)
 
-	fmt.Println(string(body))
+	return t.decodePeers(resp.Body)
 }
 
 func (t *TorrentFile) buildTrackerURL(peerID [20]byte, port uint16) (string, error) {
@@ -72,4 +71,25 @@ func (t *TorrentFile) buildTrackerURL(peerID [20]byte, port uint16) (string, err
 
 	base.RawQuery = params.Encode()
 	return base.String(), nil
+}
+
+func (t *TorrentFile) decodePeers(bencodeIO io.Reader) ([]Peer, error) {
+	var bps bencodePeers
+
+	if err := bencode.Unmarshal(bencodeIO, &bps); err != nil {
+		return nil, err
+	}
+
+	var peers []Peer
+
+	for _, bp := range bps.Peers {
+		var peer Peer
+
+		peer.Port = uint16(bp.Port)
+		peer.IP = net.IP(bp.IP)
+
+		peers = append(peers, peer)
+	}
+
+	return peers, nil
 }

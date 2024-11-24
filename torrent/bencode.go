@@ -19,6 +19,16 @@ type bencodeInfo struct {
 	Name         string `bencode:"name"`
 }
 
+type bencodePeers struct {
+	Interval int           `bencode:"interval"`
+	Peers    []bencodePeer `bencode:"peers"`
+}
+
+type bencodePeer struct {
+	IP   string `bencode:"ip"`
+	Port int    `bencode:"port"`
+}
+
 func (bto bencodeTorrent) toTorrentFile() (*TorrentFile, error) {
 	var err error
 
