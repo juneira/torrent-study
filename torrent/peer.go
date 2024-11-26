@@ -5,9 +5,17 @@ import (
 	"net"
 )
 
+type Connection interface {
+}
+
 type Peer struct {
 	IP   net.IP
 	Port uint16
+	conn Connection
+}
+
+func (p *Peer) SetConnection(conn Connection) {
+	p.conn = conn
 }
 
 func (p *Peer) Address() string {
