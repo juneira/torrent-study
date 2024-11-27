@@ -6,6 +6,8 @@ import (
 )
 
 type Connection interface {
+	Send(message []byte) error
+	Receive(size int) ([]byte, error)
 }
 
 type Peer struct {
