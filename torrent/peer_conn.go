@@ -21,3 +21,18 @@ func NewPeerConn(p *Peer) (*PeerConn, error) {
 	pc.Conn = conn
 	return &pc, nil
 }
+
+func (pc *PeerConn) Send(message []byte) error {
+	_, err := pc.Conn.Write(message)
+	return err
+}
+
+func (pc *PeerConn) Receive(size int) ([]byte, error) {
+	buff := make([]byte, size)
+	_, err := pc.Conn.Read(buff)
+	if err != nil {
+		return []byte{}, err
+	}
+
+	return buff, nil
+}
