@@ -1,6 +1,7 @@
 package torrent
 
 import (
+	"io"
 	"net"
 	"time"
 )
@@ -22,7 +23,7 @@ func NewPeerConn(p *Peer) (*PeerConn, error) {
 	return &pc, nil
 }
 
-func (pc *PeerConn) GetCoon() net.Conn {
+func (pc *PeerConn) GetConn() io.Reader {
 	return pc.conn
 }
 

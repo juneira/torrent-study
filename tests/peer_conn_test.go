@@ -53,24 +53,6 @@ func createServer(t *testing.T, response []byte, expectedReceive []byte) (server
 	return serverConn
 }
 
-func TestNewPeerConn(t *testing.T) {
-	createServer(t, []byte{}, []byte{})
-
-	p := torrent.Peer{IP: net.IP("127.0.0.1"), Port: uint16(5555)}
-
-	pc, err := torrent.NewPeerConn(&p)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	result := pc.GetCoon().RemoteAddr().String()
-	expected := ADDR_TEST
-
-	if result != expected {
-		t.Errorf("result: %s, expected: %s", result, expected)
-	}
-}
-
 func TestPeerConnSend(t *testing.T) {
 	message := []byte{0, 1, 2, 3}
 

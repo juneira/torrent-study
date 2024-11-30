@@ -1,11 +1,15 @@
 package torrent
 
 import (
+	"errors"
 	"fmt"
+	"io"
 	"net"
+	"reflect"
 )
 
 type Connection interface {
+	GetConn() io.Reader
 	Send(message []byte) error
 	Receive(size int) ([]byte, error)
 }
@@ -22,4 +26,26 @@ func (p *Peer) SetConnection(conn Connection) {
 
 func (p *Peer) Address() string {
 	return fmt.Sprintf("%s:%d", string(p.IP), p.Port)
+}
+
+func (p *Peer) Handshake(infoHash [20]byte, peerID [20]byte) error {
+	messageHS := Handshake{Pstr: "BitTorrent protocol", InfoHash: infoHash, PeerID: peerID}
+	message := messageHS.Serialize()
+
+	if err := p.conn.Send(message); err != nil {
+		return err
+	}
+
+	receiveHS, err := readerToHandshake(p.conn.GetConn())
+	if err != nil {
+		return err
+	}
+
+	if !reflect.DeepEqual(receiveHS.InfoHash, infoHash) {
+		errorMessage := fmt.Sprintf("invalid infoHash: expected: %v | returned: %v", infoHash, receiveHS.InfoHash)
+
+		return errors.New(errorMessage)
+	}
+
+	return nil
 }
