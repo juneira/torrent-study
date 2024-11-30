@@ -6,7 +6,7 @@ import (
 )
 
 type PeerConn struct {
-	Conn net.Conn
+	conn net.Conn
 }
 
 const TIMEOUT_IN_SECONDS = 3
@@ -18,18 +18,22 @@ func NewPeerConn(p *Peer) (*PeerConn, error) {
 		return nil, err
 	}
 
-	pc.Conn = conn
+	pc.conn = conn
 	return &pc, nil
 }
 
+func (pc *PeerConn) GetCoon() net.Conn {
+	return pc.conn
+}
+
 func (pc *PeerConn) Send(message []byte) error {
-	_, err := pc.Conn.Write(message)
+	_, err := pc.conn.Write(message)
 	return err
 }
 
 func (pc *PeerConn) Receive(size int) ([]byte, error) {
 	buff := make([]byte, size)
-	_, err := pc.Conn.Read(buff)
+	_, err := pc.conn.Read(buff)
 	if err != nil {
 		return []byte{}, err
 	}

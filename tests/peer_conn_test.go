@@ -63,7 +63,7 @@ func TestNewPeerConn(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	result := pc.Conn.RemoteAddr().String()
+	result := pc.GetCoon().RemoteAddr().String()
 	expected := ADDR_TEST
 
 	if result != expected {
