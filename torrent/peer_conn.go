@@ -31,13 +31,3 @@ func (pc *PeerConn) Send(message []byte) error {
 	_, err := pc.conn.Write(message)
 	return err
 }
-
-func (pc *PeerConn) Receive(size int) ([]byte, error) {
-	buff := make([]byte, size)
-	_, err := pc.conn.Read(buff)
-	if err != nil {
-		return []byte{}, err
-	}
-
-	return buff, nil
-}

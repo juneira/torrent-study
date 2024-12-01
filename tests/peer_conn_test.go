@@ -82,17 +82,8 @@ func TestPeerConnReceive(t *testing.T) {
 
 	done = make(chan struct{})
 
-	pc, err := torrent.NewPeerConn(&p)
+	_, err := torrent.NewPeerConn(&p)
 	if err != nil {
 		t.Fatal(err)
-	}
-
-	result, err := pc.Receive(len(message))
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if !reflect.DeepEqual(result, message) {
-		t.Errorf("result: %v, expected: %v", result, message)
 	}
 }
