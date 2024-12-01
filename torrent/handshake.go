@@ -1,6 +1,9 @@
 package torrent
 
-import "io"
+import (
+	"errors"
+	"io"
+)
 
 type Handshake struct {
 	Pstr     string
@@ -20,5 +23,33 @@ func (h *Handshake) Serialize() []byte {
 }
 
 func readerToHandshake(r io.Reader) (*Handshake, error) {
-	return &Handshake{}, nil
+	length := [1]byte{}
+	_, err := io.ReadFull(r, length[:])
+	if err != nil {
+		return nil, err
+	}
+
+	pstrlen := int(length[0])
+	if pstrlen == 0 {
+		return nil, errors.New("pstrlen should be greater than zero")
+	}
+
+	handshakeBuff := make([]byte, 48+pstrlen)
+	_, err = io.ReadFull(r, handshakeBuff)
+	if err != nil {
+		return nil, err
+	}
+
+	var infoHash, peerID [20]byte
+
+	copy(infoHash[:], handshakeBuff[pstrlen+8:pstrlen+8+20])
+	copy(peerID[:], handshakeBuff[pstrlen+8+20:])
+
+	h := Handshake{
+		Pstr:     string(handshakeBuff[0:pstrlen]),
+		InfoHash: infoHash,
+		PeerID:   peerID,
+	}
+
+	return &h, nil
 }

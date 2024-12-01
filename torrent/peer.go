@@ -1,17 +1,16 @@
 package torrent
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"io"
 	"net"
-	"reflect"
 )
 
 type Connection interface {
 	GetConn() io.Reader
 	Send(message []byte) error
-	Receive(size int) ([]byte, error)
 }
 
 type Peer struct {
@@ -41,7 +40,7 @@ func (p *Peer) Handshake(infoHash [20]byte, peerID [20]byte) error {
 		return err
 	}
 
-	if !reflect.DeepEqual(receiveHS.InfoHash, infoHash) {
+	if !bytes.Equal(receiveHS.InfoHash[:], infoHash[:]) {
 		errorMessage := fmt.Sprintf("invalid infoHash: expected: %v | returned: %v", infoHash, receiveHS.InfoHash)
 
 		return errors.New(errorMessage)
