@@ -3,7 +3,7 @@ package torrent_test
 import (
 	"bytes"
 	"io"
-	"net"
+	"reflect"
 	"testing"
 
 	"github.com/juneira/torrent-study/torrent"
@@ -30,7 +30,7 @@ func (m *MockConnection) Send(message []byte) error {
 }
 
 func TestPeerHandshake(t *testing.T) {
-	p := torrent.Peer{IP: net.IP("127.0.0.1"), Port: uint16(5555)}
+	p := torrent.Peer{}
 
 	infoHash := [20]byte{0, 1, 2, 3, 4, 5, 6, 7, 8}
 	peerID := [20]byte{0, 1, 2, 3, 4, 5, 6, 7, 8}
@@ -39,10 +39,30 @@ func TestPeerHandshake(t *testing.T) {
 		0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 0, 0, 0,
 		0, 0, 0, 0, 0, 0, 0, 0}
 
-	mock := MockConnection{t: t, sendData: message, expectedReceive: message}
-	p.SetConnection(&mock)
+	mockConn := MockConnection{t: t, sendData: message, expectedReceive: message}
+	p.SetConnection(&mockConn)
 
 	if err := p.Handshake(infoHash, peerID); err != nil {
 		t.Errorf("unexpected error: %v", err)
+	}
+}
+
+func TestPeerRecvBitfield(t *testing.T) {
+	p := torrent.Peer{}
+
+	message := []byte{0, 0, 0, 5, byte(torrent.MsgBitfield), 255, 255, 255, 255}
+	expected := torrent.Bitfield([]byte{255, 255, 255, 255})
+
+	mockConn := MockConnection{t: t, sendData: message, expectedReceive: nil}
+	p.SetConnection(&mockConn)
+
+	if err := p.RecvBitfield(); err != nil {
+		t.Fatal(err)
+	}
+
+	result := p.Bitfield
+
+	if !reflect.DeepEqual(result, expected) {
+		t.Errorf("result: %v, expected: %v", result, expected)
 	}
 }

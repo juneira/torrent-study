@@ -14,9 +14,10 @@ type Connection interface {
 }
 
 type Peer struct {
-	IP   net.IP
-	Port uint16
-	conn Connection
+	IP       net.IP
+	Port     uint16
+	Bitfield Bitfield
+	conn     Connection
 }
 
 func (p *Peer) SetConnection(conn Connection) {
@@ -45,6 +46,21 @@ func (p *Peer) Handshake(infoHash [20]byte, peerID [20]byte) error {
 
 		return errors.New(errorMessage)
 	}
+
+	return nil
+}
+
+func (p *Peer) RecvBitfield() error {
+	m, err := readerToMessage(p.conn.GetConn())
+	if err != nil {
+		return err
+	}
+
+	if m.ID != MsgBitfield {
+		return errors.New("Invalid Message ID")
+	}
+
+	p.Bitfield = m.Payload
 
 	return nil
 }
