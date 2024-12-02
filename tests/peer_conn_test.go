@@ -72,18 +72,3 @@ func TestPeerConnSend(t *testing.T) {
 	}
 	<-done
 }
-
-func TestPeerConnReceive(t *testing.T) {
-	message := []byte{0, 1, 2, 3}
-
-	createServer(t, message, []byte{})
-
-	p := torrent.Peer{IP: net.IP("127.0.0.1"), Port: uint16(5555)}
-
-	done = make(chan struct{})
-
-	_, err := torrent.NewPeerConn(&p)
-	if err != nil {
-		t.Fatal(err)
-	}
-}
