@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+
 	"github.com/juneira/torrent-study/torrent"
 )
 
@@ -21,5 +23,15 @@ func main() {
 
 	peer.SetConnection(peerConn)
 
-	peer.Handshake(t.InfoHash, pid)
+	err = peer.Handshake(t.InfoHash, pid)
+	if err != nil {
+		panic(err)
+	}
+
+	err = peer.RecvBitfield()
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println(peer.Bitfield)
 }
