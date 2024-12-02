@@ -1,6 +1,9 @@
 package torrent
 
-import "encoding/binary"
+import (
+	"encoding/binary"
+	"io"
+)
 
 type messageID uint8
 
@@ -30,4 +33,27 @@ func (m *Message) Serialize() []byte {
 	copy(buf[5:], m.Payload[:])
 
 	return buf
+}
+
+func readerToMessage(r io.Reader) (*Message, error) {
+	m := Message{}
+
+	lengthBuff := [4]byte{}
+	_, err := io.ReadFull(r, lengthBuff[:])
+	if err != nil {
+		return nil, err
+	}
+
+	length := binary.BigEndian.Uint32(lengthBuff[:])
+	messageBuff := make([]byte, length)
+
+	_, err = io.ReadFull(r, messageBuff)
+	if err != nil {
+		return nil, err
+	}
+
+	m.ID = messageID(messageBuff[0])
+	m.Payload = messageBuff[1:]
+
+	return &m, nil
 }
