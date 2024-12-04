@@ -66,3 +66,21 @@ func TestPeerRecvBitfield(t *testing.T) {
 		t.Errorf("result: %v, expected: %v", result, expected)
 	}
 }
+
+func TestPeerSendUnchoke(t *testing.T) {
+	p := torrent.Peer{}
+
+	mockConn := MockConnection{t: t, expectedReceive: []byte{0, 0, 0, 1, 1}}
+	p.SetConnection(&mockConn)
+
+	p.SendUnchoke()
+}
+
+func TestPeerSendInterested(t *testing.T) {
+	p := torrent.Peer{}
+
+	mockConn := MockConnection{t: t, expectedReceive: []byte{0, 0, 0, 1, 2}}
+	p.SetConnection(&mockConn)
+
+	p.SendInterested()
+}

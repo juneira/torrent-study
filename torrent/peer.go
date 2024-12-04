@@ -64,3 +64,15 @@ func (p *Peer) RecvBitfield() error {
 
 	return nil
 }
+
+func (p *Peer) SendUnchoke() error {
+	m := Message{ID: MsgUnchoke}
+
+	return p.conn.Send(m.Serialize())
+}
+
+func (p *Peer) SendInterested() error {
+	m := Message{ID: MsgInterested}
+
+	return p.conn.Send(m.Serialize())
+}
