@@ -2,6 +2,7 @@ package torrent
 
 import (
 	"encoding/binary"
+	"errors"
 	"io"
 )
 
@@ -33,6 +34,34 @@ func (m *Message) Serialize() []byte {
 	copy(buf[5:], m.Payload[:])
 
 	return buf
+}
+
+func (m *Message) ParsePiece(index int, buf []byte) (int, error) {
+	if m.ID != MsgPiece {
+		return 0, errors.New("invalid messaage id")
+	}
+
+	if len(m.Payload) < 8 {
+		return 0, errors.New("payload too short")
+	}
+
+	messageIndex := int(binary.BigEndian.Uint32(m.Payload[0:4]))
+	if index != messageIndex {
+		return 0, errors.New("invalid index")
+	}
+
+	begin := int(binary.BigEndian.Uint32(m.Payload[4:8]))
+	if begin >= len(buf) {
+		return 0, errors.New("begin offset too high")
+	}
+
+	data := m.Payload[8:]
+	if begin+len(data) > len(buf) {
+		return 0, errors.New("buf too small to receive data")
+	}
+
+	copy(buf[begin:], data)
+	return len(data), nil
 }
 
 func readerToMessage(r io.Reader) (*Message, error) {
