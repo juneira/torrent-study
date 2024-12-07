@@ -25,6 +25,15 @@ type Message struct {
 	Payload []byte
 }
 
+func FormatRequest(index, begin, length int) *Message {
+	payload := make([]byte, 12)
+	binary.BigEndian.PutUint32(payload[0:4], uint32(index))
+	binary.BigEndian.PutUint32(payload[4:8], uint32(begin))
+	binary.BigEndian.PutUint32(payload[8:], uint32(length))
+
+	return &Message{ID: MsgRequest, Payload: payload}
+}
+
 func (m *Message) Serialize() []byte {
 	length := uint32(len(m.Payload) + 1) // +1 for ID
 	buf := make([]byte, 4+length)

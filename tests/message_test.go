@@ -2,10 +2,20 @@ package torrent_test
 
 import (
 	"bytes"
+	"reflect"
 	"testing"
 
 	"github.com/juneira/torrent-study/torrent"
 )
+
+func TestFormatRequest(t *testing.T) {
+	result := torrent.FormatRequest(1, 2, 3)
+	expected := &torrent.Message{ID: torrent.MsgRequest, Payload: []byte{0, 0, 0, 1, 0, 0, 0, 2, 0, 0, 0, 3}}
+
+	if !reflect.DeepEqual(result, expected) {
+		t.Errorf("result: %v, expected: %v", result, expected)
+	}
+}
 
 func TestMessageSerialize(t *testing.T) {
 	payload := []byte{1, 2, 3, 4}
