@@ -84,3 +84,38 @@ func TestPeerSendInterested(t *testing.T) {
 
 	p.SendInterested()
 }
+
+func TestPeerReadMessage(t *testing.T) {
+	p := torrent.Peer{}
+
+	msgChoke := torrent.Message{ID: torrent.MsgChoke}
+	msgUnchoke := torrent.Message{ID: torrent.MsgUnchoke}
+
+	mockConn := MockConnection{t: t, sendData: msgChoke.Serialize()}
+	p.SetConnection(&mockConn)
+
+	if err := p.ReadMessage(); err != nil {
+		t.Fatal(err)
+	}
+
+	result := p.IsChocked()
+	expected := true
+
+	if result != expected {
+		t.Errorf("result: %t, expected: %t", result, expected)
+	}
+
+	mockConn = MockConnection{t: t, sendData: msgUnchoke.Serialize()}
+	p.SetConnection(&mockConn)
+
+	if err := p.ReadMessage(); err != nil {
+		t.Fatal(err)
+	}
+
+	result = p.IsChocked()
+	expected = false
+
+	if result != expected {
+		t.Errorf("result: %t, expected: %t", result, expected)
+	}
+}
