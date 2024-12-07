@@ -29,6 +29,17 @@ func (m *MockConnection) Send(message []byte) error {
 	return nil
 }
 
+func TestPeerAddPiece(t *testing.T) {
+	p := torrent.Peer{}
+	piece := &torrent.Piece{}
+
+	p.AddPiece(piece)
+
+	if !reflect.DeepEqual(p.Pieces(), []*torrent.Piece{piece}) {
+		t.Errorf("result: %v, expected: %v", p.Pieces(), []*torrent.Piece{piece})
+	}
+}
+
 func TestPeerHandshake(t *testing.T) {
 	p := torrent.Peer{}
 

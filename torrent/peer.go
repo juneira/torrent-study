@@ -18,12 +18,20 @@ type Peer struct {
 	Port     uint16
 	Bitfield Bitfield
 	choked   bool
-	pieces   []Piece
+	pieces   []*Piece
 	conn     Connection
 }
 
 func (p *Peer) SetConnection(conn Connection) {
 	p.conn = conn
+}
+
+func (p *Peer) AddPiece(piece *Piece) {
+	p.pieces = append(p.pieces, piece)
+}
+
+func (p *Peer) Pieces() []*Piece {
+	return p.pieces
 }
 
 func (p *Peer) IsChocked() bool {
