@@ -114,6 +114,17 @@ func (p *Peer) ReadMessage() error {
 		p.choked = true
 	case MsgUnchoke:
 		p.choked = false
+	case MsgPiece:
+		index, err := m.ParsePieceIndex()
+		if err != nil {
+			return err
+		}
+
+		piece := p.getPieceByIndex(index)
+		_, err = m.ParsePiece(index, piece.Data)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil

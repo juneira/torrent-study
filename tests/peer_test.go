@@ -113,6 +113,7 @@ func TestPeerReadMessage(t *testing.T) {
 
 	msgChoke := torrent.Message{ID: torrent.MsgChoke}
 	msgUnchoke := torrent.Message{ID: torrent.MsgUnchoke}
+	msgPiece := torrent.Message{ID: torrent.MsgPiece, Payload: []byte{0, 0, 0, 1, 0, 0, 0, 0, 1, 2, 3}}
 
 	mockConn := MockConnection{t: t, sendData: msgChoke.Serialize()}
 	p.SetConnection(&mockConn)
@@ -140,5 +141,26 @@ func TestPeerReadMessage(t *testing.T) {
 
 	if result != expected {
 		t.Errorf("result: %t, expected: %t", result, expected)
+	}
+
+	piece := torrent.Piece{Index: 1}
+	piece.Data = make([]byte, 1024)
+
+	data := [1024]byte{1, 2, 3}
+	expectedPiece := torrent.Piece{Index: 1, Data: data[:]}
+
+	p.AddPiece(&piece)
+
+	mockConn = MockConnection{t: t, sendData: msgPiece.Serialize()}
+	p.SetConnection(&mockConn)
+
+	if err := p.ReadMessage(); err != nil {
+		t.Fatal(err)
+	}
+
+	resultPiece := *p.Pieces()[0]
+
+	if !reflect.DeepEqual(resultPiece, expectedPiece) {
+		t.Errorf("result: %v, expected: %v", resultPiece, expectedPiece)
 	}
 }
