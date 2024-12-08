@@ -91,6 +91,18 @@ func (p *Peer) SendInterested() error {
 	return p.conn.Send(m.Serialize())
 }
 
+func (p *Peer) SendRequest(index int) error {
+	piece := p.getPieceByIndex(index)
+
+	if piece == nil {
+		return errors.New("not exists piece to this peer")
+	}
+
+	m := FormatRequest(index, piece.Begin, LengthMax)
+
+	return p.conn.Send(m.Serialize())
+}
+
 func (p *Peer) ReadMessage() error {
 	m, err := readerToMessage(p.conn.GetConn())
 	if err != nil {
@@ -102,6 +114,16 @@ func (p *Peer) ReadMessage() error {
 		p.choked = true
 	case MsgUnchoke:
 		p.choked = false
+	}
+
+	return nil
+}
+
+func (p *Peer) getPieceByIndex(index int) *Piece {
+	for _, piece := range p.pieces {
+		if piece.Index == index {
+			return piece
+		}
 	}
 
 	return nil

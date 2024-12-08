@@ -96,6 +96,18 @@ func TestPeerSendInterested(t *testing.T) {
 	p.SendInterested()
 }
 
+func TestPeerSendRequest(t *testing.T) {
+	p := torrent.Peer{}
+	piece := torrent.Piece{Index: 1}
+
+	p.AddPiece(&piece)
+
+	mockConn := MockConnection{t: t, expectedReceive: []byte{0, 0, 0, 13, 6, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 4, 0}}
+
+	p.SetConnection(&mockConn)
+	p.SendRequest(1)
+}
+
 func TestPeerReadMessage(t *testing.T) {
 	p := torrent.Peer{}
 
