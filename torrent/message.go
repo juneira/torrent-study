@@ -45,6 +45,10 @@ func (m *Message) Serialize() []byte {
 	return buf
 }
 
+func (m *Message) ParsePieceIndex() (int, error) {
+	return int(binary.BigEndian.Uint32(m.Payload[0:4])), nil
+}
+
 func (m *Message) ParsePiece(index int, buf []byte) (int, error) {
 	if m.ID != MsgPiece {
 		return 0, errors.New("invalid messaage id")

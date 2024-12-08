@@ -30,6 +30,22 @@ func TestMessageSerialize(t *testing.T) {
 	}
 }
 
+func TestMessageParsePieceIndex(t *testing.T) {
+	payload := []byte{0, 0, 0, 23, 0, 0, 0, 4, 1, 2, 3, 4, 5}
+	m := torrent.Message{ID: torrent.MsgPiece, Payload: payload}
+
+	result, err := m.ParsePieceIndex()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expected := 23
+
+	if result != expected {
+		t.Errorf("result: %d, expected: %d", result, expected)
+	}
+}
+
 func TestMessageParsePiece(t *testing.T) {
 	payload := []byte{0, 0, 0, 23, 0, 0, 0, 4, 1, 2, 3, 4, 5}
 	m := torrent.Message{ID: torrent.MsgPiece, Payload: payload}
