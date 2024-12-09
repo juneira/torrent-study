@@ -53,6 +53,31 @@ func (t *TorrentFile) GetPeers(peerID [20]byte, port uint16) ([]Peer, error) {
 	return t.decodePeers(resp.Body)
 }
 
+func (t *TorrentFile) GetPieces() (pieces []*Piece) {
+	for index, piecehash := range t.PieceHashes {
+		piece := Piece{Index: index, Hash: piecehash}
+		piece.Data = make([]byte, t.calculatePieceSize(index))
+		pieces = append(pieces, &piece)
+	}
+
+	return pieces
+}
+
+func (t *TorrentFile) calculateInitAndEndByPieceIndex(index int) (begin, end int) {
+	begin = index * t.PiecesLength
+	end = begin + t.PiecesLength
+	if end > t.Length {
+		end = t.Length
+	}
+
+	return begin, end
+}
+
+func (t *TorrentFile) calculatePieceSize(index int) int {
+	begin, end := t.calculateInitAndEndByPieceIndex(index)
+	return end - begin
+}
+
 func (t *TorrentFile) buildTrackerURL(peerID [20]byte, port uint16) (string, error) {
 	base, err := url.Parse(t.Announce)
 	if err != nil {

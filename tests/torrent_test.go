@@ -40,7 +40,7 @@ func TestFromFilename(t *testing.T) {
 	}
 }
 
-func TestGetPeers(t *testing.T) {
+func TestTorrentFileGetPeers(t *testing.T) {
 	mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		response := []byte(
 			"d8:intervali900e5:peersld2:ip13:99.104.171.974:porti52350eed2:ip12:92.190.54.114:porti51413eeee",
@@ -75,5 +75,29 @@ func TestGetPeers(t *testing.T) {
 
 	if !reflect.DeepEqual(expectedPeers, result) {
 		t.Errorf(`expected: %v, result: %v`, expectedPeers, result)
+	}
+}
+
+func TestTorrentFileGetPieces(t *testing.T) {
+	tf := torrent.TorrentFile{PiecesLength: 5, Length: 13}
+
+	// 3 pieces
+	tf.PieceHashes = append(tf.PieceHashes, [20]byte{})
+	tf.PieceHashes = append(tf.PieceHashes, [20]byte{})
+	tf.PieceHashes = append(tf.PieceHashes, [20]byte{})
+
+	dataA := make([]byte, 5)
+	dataB := make([]byte, 3)
+
+	expected := []*torrent.Piece{
+		{Index: 0, Hash: [20]byte{}, Data: dataA},
+		{Index: 1, Hash: [20]byte{}, Data: dataA},
+		{Index: 2, Hash: [20]byte{}, Data: dataB},
+	}
+
+	result := tf.GetPieces()
+
+	if !reflect.DeepEqual(result, expected) {
+		t.Errorf("result: %v, expected: %v", result, expected)
 	}
 }
