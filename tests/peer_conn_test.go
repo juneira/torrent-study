@@ -72,3 +72,31 @@ func TestPeerConnSend(t *testing.T) {
 	}
 	<-done
 }
+
+func TestPeerClose(t *testing.T) {
+	createServer(t, []byte{}, []byte{})
+	p := torrent.Peer{IP: net.IP("127.0.0.1"), Port: uint16(5555)}
+
+	pc, err := torrent.NewPeerConn(&p)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err := pc.Close(); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestPeerSetDeadline(t *testing.T) {
+	createServer(t, []byte{}, []byte{})
+	p := torrent.Peer{IP: net.IP("127.0.0.1"), Port: uint16(5555)}
+
+	pc, err := torrent.NewPeerConn(&p)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err := pc.SetDeadline(); err != nil {
+		t.Fatal(err)
+	}
+}

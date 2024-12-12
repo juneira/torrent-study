@@ -31,3 +31,11 @@ func (pc *PeerConn) Send(message []byte) error {
 	_, err := pc.conn.Write(message)
 	return err
 }
+
+func (pc *PeerConn) Close() error {
+	return pc.conn.Close()
+}
+
+func (pc *PeerConn) SetDeadline() error {
+	return pc.conn.SetDeadline(time.Now().Add(30 * time.Second))
+}
