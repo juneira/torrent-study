@@ -34,6 +34,13 @@ func FormatRequest(index, begin, length int) *Message {
 	return &Message{ID: MsgRequest, Payload: payload}
 }
 
+func FormatHave(index int) *Message {
+	payload := make([]byte, 4)
+	binary.BigEndian.PutUint32(payload[0:4], uint32(index))
+
+	return &Message{ID: MsgHave, Payload: payload}
+}
+
 func (m *Message) Serialize() []byte {
 	length := uint32(len(m.Payload) + 1) // +1 for ID
 	buf := make([]byte, 4+length)

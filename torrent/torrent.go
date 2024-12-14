@@ -112,6 +112,7 @@ func (t *TorrentFile) decodePeers(bencodeIO io.Reader) ([]Peer, error) {
 
 		peer.Port = uint16(bp.Port)
 		peer.IP = net.IP(bp.IP)
+		peer.Choked = true
 
 		peers = append(peers, peer)
 	}

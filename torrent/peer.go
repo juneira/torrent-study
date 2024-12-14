@@ -11,14 +11,15 @@ import (
 type Connection interface {
 	GetConn() io.Reader
 	Send(message []byte) error
+	SetDeadline() error
 }
 
 type Peer struct {
 	IP       net.IP
 	Port     uint16
 	Bitfield Bitfield
-	choked   bool
-	pieces   []*Piece
+	Choked   bool
+	Piece    *Piece
 	conn     Connection
 }
 
@@ -26,16 +27,64 @@ func (p *Peer) SetConnection(conn Connection) {
 	p.conn = conn
 }
 
-func (p *Peer) AddPiece(piece *Piece) {
-	p.pieces = append(p.pieces, piece)
+func (p *Peer) DownloadPiece() error {
+	if err := p.SendUnchoke(); err != nil {
+		panic(err)
+	}
+
+	if err := p.SendInterested(); err != nil {
+		panic(err)
+	}
+
+	if p.Piece == nil {
+		return errors.New("peer has none piece")
+	}
+
+	for p.Choked {
+		if err := p.ReadMessage(); err != nil {
+			return err
+		}
+	}
+
+	if err := p.conn.SetDeadline(); err != nil {
+		return err
+	}
+
+	return p.downloadPiece(p.Piece)
 }
 
-func (p *Peer) Pieces() []*Piece {
-	return p.pieces
+func (p *Peer) downloadPiece(piece *Piece) error {
+	for piece.Status == PiecePending {
+		if err := p.SendRequest(); err != nil {
+			piece.Status = PieceError
+
+			return err
+		}
+
+		piece.Waiting = true
+
+		for piece.Waiting {
+			if err := p.ReadMessage(); err != nil {
+				piece.Status = PieceError
+
+				return err
+			}
+		}
+
+		if err := piece.CheckFinished(); err != nil {
+			return err
+		}
+
+		if piece.Status == PieceFinished {
+			return p.SendHave()
+		}
+	}
+
+	return nil
 }
 
 func (p *Peer) IsChocked() bool {
-	return p.choked
+	return p.Choked
 }
 
 func (p *Peer) Address() string {
@@ -91,14 +140,22 @@ func (p *Peer) SendInterested() error {
 	return p.conn.Send(m.Serialize())
 }
 
-func (p *Peer) SendRequest(index int) error {
-	piece := p.getPieceByIndex(index)
-
-	if piece == nil {
+func (p *Peer) SendRequest() error {
+	if p.Piece == nil {
 		return errors.New("not exists piece to this peer")
 	}
 
-	m := FormatRequest(index, piece.Begin, LengthMax)
+	m := FormatRequest(p.Piece.Index, p.Piece.Begin, LengthMax)
+
+	return p.conn.Send(m.Serialize())
+}
+
+func (p *Peer) SendHave() error {
+	if p.Piece == nil {
+		return errors.New("not exists piece to this peer")
+	}
+
+	m := FormatHave(p.Piece.Index)
 
 	return p.conn.Send(m.Serialize())
 }
@@ -111,30 +168,26 @@ func (p *Peer) ReadMessage() error {
 
 	switch m.ID {
 	case MsgChoke:
-		p.choked = true
+		p.Choked = true
 	case MsgUnchoke:
-		p.choked = false
+		p.Choked = false
 	case MsgPiece:
 		index, err := m.ParsePieceIndex()
 		if err != nil {
 			return err
 		}
 
-		piece := p.getPieceByIndex(index)
-		_, err = m.ParsePiece(index, piece.Data)
+		if index != p.Piece.Index {
+			return errors.New("invalid index")
+		}
+
+		downloaded, err := m.ParsePiece(index, p.Piece.Data)
 		if err != nil {
 			return err
 		}
-	}
 
-	return nil
-}
-
-func (p *Peer) getPieceByIndex(index int) *Piece {
-	for _, piece := range p.pieces {
-		if piece.Index == index {
-			return piece
-		}
+		p.Piece.Begin += downloaded
+		p.Piece.Waiting = false
 	}
 
 	return nil

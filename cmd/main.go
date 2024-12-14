@@ -15,23 +15,39 @@ func main() {
 		panic(err)
 	}
 
-	peer := peers[0]
-	peerConn, err := torrent.NewPeerConn(&peer)
-	if err != nil {
-		panic(err)
+	var peer *torrent.Peer
+
+	for _, p := range peers {
+		peer = &p
+
+		fmt.Printf("try connect to: %s:%d\n", string(peer.IP), peer.Port)
+
+		peerConn, err := torrent.NewPeerConn(peer)
+		peer.SetConnection(peerConn)
+
+		if err != nil {
+			continue
+		}
+
+		if err = peer.Handshake(t.InfoHash, pid); err != nil {
+			continue
+		}
+
+		if err = peer.RecvBitfield(); err != nil {
+			continue
+		}
+
+		break
 	}
 
-	peer.SetConnection(peerConn)
+	pieces := t.GetPieces()
 
-	err = peer.Handshake(t.InfoHash, pid)
-	if err != nil {
-		panic(err)
+	if peer.Bitfield.HasPiece(0) {
+		peer.Piece = pieces[0]
 	}
 
-	err = peer.RecvBitfield()
-	if err != nil {
-		panic(err)
-	}
+	peer.DownloadPieces()
 
-	fmt.Println(peer.Bitfield)
+	for _, piece := range peer.Pieces() {
+	}
 }

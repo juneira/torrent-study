@@ -17,6 +17,15 @@ func TestFormatRequest(t *testing.T) {
 	}
 }
 
+func TestFormatHave(t *testing.T) {
+	result := torrent.FormatHave(1)
+	expected := &torrent.Message{ID: torrent.MsgHave, Payload: []byte{0, 0, 0, 1}}
+
+	if !reflect.DeepEqual(result, expected) {
+		t.Errorf("result: %v, expected: %v", result, expected)
+	}
+}
+
 func TestMessageSerialize(t *testing.T) {
 	payload := []byte{1, 2, 3, 4}
 	id := torrent.MsgPiece

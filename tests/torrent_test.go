@@ -64,12 +64,14 @@ func TestTorrentFileGetPeers(t *testing.T) {
 
 	expectedPeers := []torrent.Peer{
 		{
-			IP:   net.IP("99.104.171.97"),
-			Port: uint16(52350),
+			IP:     net.IP("99.104.171.97"),
+			Port:   uint16(52350),
+			Choked: true,
 		},
 		{
-			IP:   net.IP("92.190.54.11"),
-			Port: uint16(51413),
+			IP:     net.IP("92.190.54.11"),
+			Port:   uint16(51413),
+			Choked: true,
 		},
 	}
 

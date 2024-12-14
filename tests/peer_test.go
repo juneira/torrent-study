@@ -29,15 +29,8 @@ func (m *MockConnection) Send(message []byte) error {
 	return nil
 }
 
-func TestPeerAddPiece(t *testing.T) {
-	p := torrent.Peer{}
-	piece := &torrent.Piece{}
-
-	p.AddPiece(piece)
-
-	if !reflect.DeepEqual(p.Pieces(), []*torrent.Piece{piece}) {
-		t.Errorf("result: %v, expected: %v", p.Pieces(), []*torrent.Piece{piece})
-	}
+func (m *MockConnection) SetDeadline() error {
+	return nil
 }
 
 func TestPeerHandshake(t *testing.T) {
@@ -100,12 +93,12 @@ func TestPeerSendRequest(t *testing.T) {
 	p := torrent.Peer{}
 	piece := torrent.Piece{Index: 1}
 
-	p.AddPiece(&piece)
+	p.Piece = &piece
 
-	mockConn := MockConnection{t: t, expectedReceive: []byte{0, 0, 0, 13, 6, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 4, 0}}
+	mockConn := MockConnection{t: t, expectedReceive: []byte{0, 0, 0, 13, 6, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 64, 0}}
 
 	p.SetConnection(&mockConn)
-	p.SendRequest(1)
+	p.SendRequest()
 }
 
 func TestPeerReadMessage(t *testing.T) {
@@ -149,7 +142,7 @@ func TestPeerReadMessage(t *testing.T) {
 	data := [1024]byte{1, 2, 3}
 	expectedPiece := torrent.Piece{Index: 1, Data: data[:]}
 
-	p.AddPiece(&piece)
+	p.Piece = &piece
 
 	mockConn = MockConnection{t: t, sendData: msgPiece.Serialize()}
 	p.SetConnection(&mockConn)
@@ -158,9 +151,7 @@ func TestPeerReadMessage(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	resultPiece := *p.Pieces()[0]
-
-	if !reflect.DeepEqual(resultPiece, expectedPiece) {
-		t.Errorf("result: %v, expected: %v", resultPiece, expectedPiece)
+	if !reflect.DeepEqual(p.Piece, p.Piece) {
+		t.Errorf("result: %v, expected: %v", p.Piece, expectedPiece)
 	}
 }
