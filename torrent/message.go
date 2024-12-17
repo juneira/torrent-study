@@ -101,6 +101,10 @@ func readerToMessage(r io.Reader) (*Message, error) {
 		return nil, err
 	}
 
+	if len(messageBuff) == 0 {
+		return nil, errors.New("empty message")
+	}
+
 	m.ID = messageID(messageBuff[0])
 	m.Payload = messageBuff[1:]
 

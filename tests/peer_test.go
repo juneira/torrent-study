@@ -33,6 +33,10 @@ func (m *MockConnection) SetDeadline() error {
 	return nil
 }
 
+func (m *MockConnection) Close() error {
+	return nil
+}
+
 func TestPeerHandshake(t *testing.T) {
 	p := torrent.Peer{}
 

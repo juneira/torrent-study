@@ -12,6 +12,7 @@ type Connection interface {
 	GetConn() io.Reader
 	Send(message []byte) error
 	SetDeadline() error
+	Close() error
 }
 
 type Peer struct {
